@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Structured JSON logging via logstash-logback-encoder.
+
+  Every log line is a JSON object. Key fields always present:
+    @timestamp  – ISO-8601 UTC
+    level       – INFO / WARN / ERROR
+    logger_name – Java class name
+    message     – event name (e.g. "fetch_started")
+    job_id      – tracing field (added via StructuredArguments.kv)
+    url         – the feed URL being processed
+
+  To trace a single job:
+    docker-compose logs app | grep '"job_id":"<uuid>"'
+-->
+<configuration>
+
+    <appender name="JSON_STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder class="net.logstash.logback.encoder.LogstashEncoder">
+            <!-- Include caller info in WARN+ for easier debugging -->
+            <includeCallerData>false</includeCallerData>
+            <throwableConverter class="net.logstash.logback.stacktrace.ShortenedThrowableConverter">
+                <maxDepthPerThrowable>20</maxDepthPerThrowable>
+                <rootCauseFirst>true</rootCauseFirst>
+            </throwableConverter>
+        </encoder>
+    </appender>
+
+    <!-- Silence noisy Hibernate / HikariCP at INFO in prod -->
+    <logger name="org.hibernate"          level="WARN"/>
+    <logger name="com.zaxxer.hikari"      level="WARN"/>
+    <logger name="org.flywaydb"           level="INFO"/>
+    <logger name="org.springframework"    level="WARN"/>
+    <logger name="com.xmlpipeline"        level="INFO"/>
+
+    <root level="INFO">
+        <appender-ref ref="JSON_STDOUT"/>
+    </root>
+
+</configuration>
