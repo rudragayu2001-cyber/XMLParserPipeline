@@ -1,0 +1,49 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: xml-pipeline
+
+  # ── Database ──────────────────────────────────────────────────────────────
+  datasource:
+    url: ${DATABASE_URL:jdbc:postgresql://localhost:5432/xmlpipeline}
+    username: ${DB_USERNAME:xmluser}
+    password: ${DB_PASSWORD:xmlpass}
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+
+  jpa:
+    hibernate:
+      ddl-auto: validate          # Flyway owns the schema; Hibernate just validates
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: false
+    open-in-view: false           # Avoid lazy-loading pitfalls
+
+  # ── Flyway ────────────────────────────────────────────────────────────────
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+    baseline-on-migrate: true
+
+  # ── Virtual Threads: disabled (requires Java 21; build.gradle targets Java 17) ─
+  # threads:
+  #   virtual:
+  #     enabled: true
+
+# ── App settings ──────────────────────────────────────────────────────────
+app:
+  max-concurrent: ${MAX_CONCURRENT:20}
+  request-timeout-seconds: ${REQUEST_TIMEOUT:30}
+  max-retries: ${MAX_RETRIES:3}
+  urls-file: ${URLS_FILE:/app/urls.json}
+
+# ── Logging ───────────────────────────────────────────────────────────────
+logging:
+  config: classpath:logback-spring.xml
